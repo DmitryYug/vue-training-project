@@ -1,41 +1,55 @@
 <template>
   <div class="appContainer">
-<!--header-->
+
+    <!--header-->
     <h2 class="title">Post list</h2>
-    <my-button @click="fetchPosts">fetch posts</my-button>
-<!--    <input v-model="test"/>-->
-    <my-button class="addBtn" @click="showModal">
-      add post
-    </my-button>
-<!--add post modal-->
+    <div class="buttonGroup">
+      <my-button class="addBtn" @click="showModal">
+        add post
+      </my-button>
+      <my-select
+          :options="sortOptions"
+          v-model:chosenOption="selectedSortOption"
+      />
+    </div>
+
+    <!--add post modal-->
     <my-modal v-model:show="openModal">
       <add-form @create="createPost"/>
     </my-modal>
-<!--post list-->
-    <posts-list :posts="posts" @remove="removePost"/>
 
+    <!--post list-->
+    <posts-list
+        :posts="sortedPosts"
+        @remove="removePost"
+        v-if="!isPostsLoading"
+    />
+    <pre-loader v-else/>
   </div>
 </template>
 
 <script>
 import AddForm from "@/components/AddForm";
 import PostsList from "@/components/PostsList";
-import MyModal from "@/components/UI/MyModal";
-import MyButton from "@/components/UI/MyButton";
 import axios from "axios";
 
 export default {
   name: 'app',
-  components: {MyButton, MyModal, PostsList, AddForm},
+  components: {PostsList, AddForm},
   data() {
     return {
-      posts: [
-        {id: 1, title: 'Post 1', body: 'here will be post 1 text'},
-        {id: 2, title: 'Post 2', body: 'here will be post 2 text'},
-        {id: 3, title: 'Post 3', body: 'here will be post 3 text'}
-      ],
+      posts: [],
       openModal: false,
+      isPostsLoading: false,
+      sortOptions: [
+        {value: 'title', title: 'Sort by name'},
+        {value: 'body', title: 'Sort by body'}
+      ],
+      selectedSortOption: ''
     }
+  },
+  mounted() {
+    this.fetchPosts()
   },
   methods: {
     createPost(post) {
@@ -51,17 +65,30 @@ export default {
     hideModal(status) {
       this.openModal = status
     },
+    changeSortOption(value) {
+      this.selectedSortOption = value
+    },
     async fetchPosts() {
       try {
+        this.isPostsLoading = true
         let response = await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10')
         this.posts = response.data
-        console.log(response)
-      }
-      catch (e) {
+      } catch (e) {
         console.log('error')
+      } finally {
+        this.isPostsLoading = false
       }
+    },
+  },
+  computed: {
+    sortedPosts() {
+      console.log(this.selectedSortOption)
+      return [...this.posts].sort((post1, post2) => {
+        return post1[this.selectedSortOption]?.localeCompare(post2[this.selectedSortOption])
+      })
     }
-  }
+  },
+
 }
 </script>
 
@@ -78,6 +105,12 @@ export default {
 
 .addBtn {
   align-self: flex-start;
+}
+
+.buttonGroup {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
 }
 </style>
 

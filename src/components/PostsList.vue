@@ -15,7 +15,7 @@
 import PostItem from "@/components/PostItem";
 
 export default {
-  name: 'post-list',
+  name: 'posts-list',
   components: {PostItem},
   props: {
     posts: {

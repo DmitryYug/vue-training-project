@@ -3,6 +3,9 @@
 
     <!--header-->
     <h2 class="title">Post list</h2>
+
+    <my-input type="text" v-model:value="searchQuery" placeholder="search"/>
+
     <div class="buttonGroup">
       <my-button class="addBtn" @click="showModal">
         add post
@@ -20,7 +23,7 @@
 
     <!--post list-->
     <posts-list
-        :posts="sortedPosts"
+        :posts="sortedAndSearchedPosts"
         @remove="removePost"
         v-if="!isPostsLoading"
     />
@@ -34,8 +37,10 @@ import PostsList from "@/components/PostsList";
 import axios from "axios";
 
 export default {
+
   name: 'app',
   components: {PostsList, AddForm},
+
   data() {
     return {
       posts: [],
@@ -45,12 +50,15 @@ export default {
         {value: 'title', title: 'Sort by name'},
         {value: 'body', title: 'Sort by body'}
       ],
-      selectedSortOption: ''
+      selectedSortOption: '',
+      searchQuery: ''
     }
   },
+
   mounted() {
     this.fetchPosts()
   },
+
   methods: {
     createPost(post) {
       this.posts.push(post)
@@ -65,9 +73,6 @@ export default {
     hideModal(status) {
       this.openModal = status
     },
-    changeSortOption(value) {
-      this.selectedSortOption = value
-    },
     async fetchPosts() {
       try {
         this.isPostsLoading = true
@@ -80,15 +85,17 @@ export default {
       }
     },
   },
+
   computed: {
     sortedPosts() {
-      console.log(this.selectedSortOption)
       return [...this.posts].sort((post1, post2) => {
         return post1[this.selectedSortOption]?.localeCompare(post2[this.selectedSortOption])
       })
+    },
+    sortedAndSearchedPosts() {
+      return this.sortedPosts.filter(post => post.title.toLowerCase().includes((this.searchQuery).toLowerCase()))
     }
   },
-
 }
 </script>
 
